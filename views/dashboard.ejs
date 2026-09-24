@@ -1,0 +1,170 @@
+<%- include('partials/header') %>
+
+<div class="dashboard-header">
+  <div>
+    <h1>Sports Dashboard</h1>
+    <p class="text-muted">Welcome back, <strong><%= currentUser.name %></strong>! Manage your games and browse open slots.</p>
+  </div>
+  <div class="dashboard-actions">
+    <a href="/sessions/new" class="btn btn-primary">+ Host New Match</a>
+    <% if (currentUser.role === 'admin') { %>
+      <a href="/sports/new" class="btn btn-secondary">+ Add Sport Category</a>
+    <% } %>
+  </div>
+</div>
+
+<div class="tabs-container">
+  <div class="tab-list" role="tablist">
+    <button class="tab-btn active" onclick="switchTab(event, 'tab-available')">Available Upcoming (<%= availableSessions.length %>)</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-created')">Created by Me (<%= createdSessions.length %>)</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-joined')">Joined Games (<%= joinedSessions.length %>)</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-cancelled')">Cancelled Sessions (<%= cancelledSessions.length %>)</button>
+  </div>
+
+  <!-- TAB 1: Available Upcoming Sessions -->
+  <div id="tab-available" class="tab-content active">
+    <h3>Available Upcoming Games</h3>
+    <% if (availableSessions.length === 0) { %>
+      <div class="empty-state">
+        <p>No open upcoming sessions right now. Be the first to <a href="/sessions/new">host a match</a>!</p>
+      </div>
+    <% } else { %>
+      <div class="sessions-grid">
+        <% availableSessions.forEach(function(sess) { %>
+          <div class="session-card">
+            <div class="session-card-header">
+              <span class="badge badge-sport"><%= sess.sport ? sess.sport.name : 'Sports' %></span>
+              <span class="badge badge-open">Open Slots: <%= (sess.additionalPlayersNeeded + 1) - sess.players.length %></span>
+            </div>
+            <h4>Venue: <%= sess.venue %></h4>
+            <div class="session-meta">
+              <p>📅 <strong>Date:</strong> <%= sess.date %></p>
+              <p>⏰ <strong>Time:</strong> <%= sess.time %></p>
+              <p>👤 <strong>Host:</strong> <%= sess.creator ? sess.creator.name : 'Unknown' %></p>
+              <p>👥 <strong>Players Enrolled:</strong> <%= sess.players.length %> / <%= sess.additionalPlayersNeeded + 1 %></p>
+            </div>
+            <a href="/sessions/<%= sess.id %>" class="btn btn-outline btn-block">View Details & Join</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- TAB 2: Sessions Created by User -->
+  <div id="tab-created" class="tab-content">
+    <h3>Sessions Hosted / Created by Me</h3>
+    <% if (createdSessions.length === 0) { %>
+      <div class="empty-state">
+        <p>You haven't hosted any sessions yet. <a href="/sessions/new">Create one now!</a></p>
+      </div>
+    <% } else { %>
+      <div class="sessions-grid">
+        <% createdSessions.forEach(function(sess) { %>
+          <div class="session-card <%= sess.isCancelled ? 'card-cancelled' : '' %>">
+            <div class="session-card-header">
+              <span class="badge badge-sport"><%= sess.sport ? sess.sport.name : 'Sports' %></span>
+              <% if (sess.isCancelled) { %>
+                <span class="badge badge-cancelled">Cancelled</span>
+              <% } else { %>
+                <span class="badge badge-success">Active Host</span>
+              <% } %>
+            </div>
+            <h4>Venue: <%= sess.venue %></h4>
+            <div class="session-meta">
+              <p>📅 <strong>Date:</strong> <%= sess.date %></p>
+              <p>⏰ <strong>Time:</strong> <%= sess.time %></p>
+              <p>👥 <strong>Roster:</strong> <%= sess.players.length %> / <%= sess.additionalPlayersNeeded + 1 %> players</p>
+              <% if (sess.isCancelled) { %>
+                <p class="cancellation-note">❌ <strong>Reason:</strong> <%= sess.cancellationReason %></p>
+              <% } %>
+            </div>
+            <a href="/sessions/<%= sess.id %>" class="btn btn-outline btn-block">Manage Match</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- TAB 3: Sessions Joined by User -->
+  <div id="tab-joined" class="tab-content">
+    <h3>Sessions Joined by Me</h3>
+    <% if (joinedSessions.length === 0) { %>
+      <div class="empty-state">
+        <p>You haven't joined any sports sessions yet. Explore available upcoming games above!</p>
+      </div>
+    <% } else { %>
+      <div class="sessions-grid">
+        <% joinedSessions.forEach(function(sess) { %>
+          <div class="session-card <%= sess.isCancelled ? 'card-cancelled' : '' %>">
+            <div class="session-card-header">
+              <span class="badge badge-sport"><%= sess.sport ? sess.sport.name : 'Sports' %></span>
+              <% if (sess.isCancelled) { %>
+                <span class="badge badge-cancelled">Cancelled</span>
+              <% } else { %>
+                <span class="badge badge-primary">Enrolled</span>
+              <% } %>
+            </div>
+            <h4>Venue: <%= sess.venue %></h4>
+            <div class="session-meta">
+              <p>📅 <strong>Date:</strong> <%= sess.date %></p>
+              <p>⏰ <strong>Time:</strong> <%= sess.time %></p>
+              <p>👤 <strong>Host:</strong> <%= sess.creator ? sess.creator.name : 'Unknown' %></p>
+              <% if (sess.isCancelled) { %>
+                <p class="cancellation-note">❌ <strong>Reason:</strong> <%= sess.cancellationReason %></p>
+              <% } %>
+            </div>
+            <a href="/sessions/<%= sess.id %>" class="btn btn-outline btn-block">View Match Details</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- TAB 4: Cancelled Sessions -->
+  <div id="tab-cancelled" class="tab-content">
+    <h3>Cancelled Sessions</h3>
+    <% if (cancelledSessions.length === 0) { %>
+      <div class="empty-state">
+        <p>No cancelled sessions on record.</p>
+      </div>
+    <% } else { %>
+      <div class="sessions-grid">
+        <% cancelledSessions.forEach(function(sess) { %>
+          <div class="session-card card-cancelled">
+            <div class="session-card-header">
+              <span class="badge badge-sport"><%= sess.sport ? sess.sport.name : 'Sports' %></span>
+              <span class="badge badge-cancelled">Cancelled</span>
+            </div>
+            <h4>Venue: <%= sess.venue %></h4>
+            <div class="session-meta">
+              <p>📅 <strong>Date:</strong> <%= sess.date %> at <%= sess.time %></p>
+              <p>👤 <strong>Host:</strong> <%= sess.creator ? sess.creator.name : 'Unknown' %></p>
+              <div class="cancellation-box">
+                <strong>Mandatory Cancellation Reason:</strong>
+                <p><%= sess.cancellationReason || 'No reason provided.' %></p>
+              </div>
+            </div>
+            <a href="/sessions/<%= sess.id %>" class="btn btn-outline btn-block">View Details</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  function switchTab(evt, tabId) {
+    var contents = document.getElementsByClassName("tab-content");
+    for (var i = 0; i < contents.length; i++) {
+      contents[i].classList.remove("active");
+    }
+    var buttons = document.getElementsByClassName("tab-btn");
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.remove("active");
+    }
+    document.getElementById(tabId).classList.add("active");
+    evt.currentTarget.classList.add("active");
+  }
+</script>
+
+<%- include('partials/footer') %>

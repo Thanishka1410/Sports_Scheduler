@@ -1,0 +1,12 @@
+<%- include('partials/header') %>
+
+<div class="auth-card text-center">
+  <div class="error-icon">⚠️</div>
+  <h2><%= title || 'An Error Occurred' %></h2>
+  <p class="subtitle"><%= message || 'Something went wrong. Please try again.' %></p>
+  <div class="form-actions" style="justify-content: center; margin-top: 1.5rem;">
+    <a href="/dashboard" class="btn btn-primary">Return to Dashboard</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

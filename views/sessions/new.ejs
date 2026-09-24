@@ -1,0 +1,52 @@
+<%- include('../partials/header') %>
+
+<div class="form-card">
+  <h2>Host a New Sports Match Session</h2>
+  <p class="subtitle">Set up the match venue, time, and required players count.</p>
+
+  <form action="/sessions" method="POST" class="form-grid">
+    <% if (csrfToken) { %>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% } %>
+
+    <div class="form-group">
+      <label for="sportId">Select Sport Category</label>
+      <select id="sportId" name="sportId" required class="form-control">
+        <option value="">-- Choose a Sport --</option>
+        <% sports.forEach(function(sport) { %>
+          <option value="<%= sport.id %>"><%= sport.name %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="venue">Venue / Location</label>
+      <input type="text" id="venue" name="venue" required placeholder="e.g. Central City Arena, Pitch 3" class="form-control">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="date">Match Date</label>
+        <input type="date" id="date" name="date" required class="form-control" min="<%= new Date().toISOString().slice(0, 10) %>">
+      </div>
+
+      <div class="form-group">
+        <label for="time">Match Time</label>
+        <input type="time" id="time" name="time" required class="form-control">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="additionalPlayersNeeded">Additional Players Needed (excluding yourself as host)</label>
+      <input type="number" id="additionalPlayersNeeded" name="additionalPlayersNeeded" required min="1" max="100" value="5" class="form-control">
+      <small class="form-text">Total match slots will equal Host + Additional Players.</small>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create Session</button>
+      <a href="/dashboard" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

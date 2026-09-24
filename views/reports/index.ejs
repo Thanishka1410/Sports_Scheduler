@@ -1,0 +1,93 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Admin Analytics & Sports Reports</h1>
+    <p class="subtitle">Filter sessions by date range and view sport popularity metrics</p>
+  </div>
+</div>
+
+<div class="filter-card">
+  <form action="/reports" method="GET" class="filter-form">
+    <div class="filter-group">
+      <label for="startDate">From Date:</label>
+      <input type="date" id="startDate" name="startDate" value="<%= startDate %>" class="form-control">
+    </div>
+    <div class="filter-group">
+      <label for="endDate">To Date:</label>
+      <input type="date" id="endDate" name="endDate" value="<%= endDate %>" class="form-control">
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="btn btn-primary">Filter Reports</button>
+      <a href="/reports" class="btn btn-outline">Reset Filter</a>
+    </div>
+  </form>
+</div>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-title">Total Sessions</div>
+    <div class="metric-value"><%= totalSessions %></div>
+    <div class="metric-subtitle">In selected date range</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title">Active Matches</div>
+    <div class="metric-value text-success"><%= activeSessionsCount %></div>
+    <div class="metric-subtitle">Completed / Upcoming</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title">Cancelled Matches</div>
+    <div class="metric-value text-danger"><%= cancelledSessionsCount %></div>
+    <div class="metric-subtitle">Host / Admin cancellations</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title">Cancellation Rate</div>
+    <div class="metric-value"><%= cancellationRate %>%</div>
+    <div class="metric-subtitle">Of all scheduled matches</div>
+  </div>
+</div>
+
+<div class="report-section">
+  <h2>Sport Popularity Breakdown</h2>
+  <p class="text-muted">Metrics grouped by sport category within range (<%= startDate %> to <%= endDate %>)</p>
+
+  <% if (sportPopularityList.length === 0) { %>
+    <div class="empty-state">
+      <p>No sport data recorded for the selected date range.</p>
+    </div>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th># Rank</th>
+          <th>Sport Category</th>
+          <th>Total Matches Scheduled</th>
+          <th>Total Player Participants</th>
+          <th>Cancelled Matches</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sportPopularityList.forEach(function(sportItem, index) { %>
+          <tr>
+            <td><strong>#<%= index + 1 %></strong></td>
+            <td><strong><%= sportItem.name %></strong></td>
+            <td><span class="badge badge-info"><%= sportItem.sessionCount %> Matches</span></td>
+            <td><span class="badge badge-primary"><%= sportItem.playerCount %> Players</span></td>
+            <td>
+              <% if (sportItem.cancelledCount > 0) { %>
+                <span class="badge badge-danger"><%= sportItem.cancelledCount %> Cancelled</span>
+              <% } else { %>
+                <span class="badge badge-success">0 Cancelled</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

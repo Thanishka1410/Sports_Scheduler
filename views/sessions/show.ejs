@@ -1,0 +1,144 @@
+<%- include('../partials/header') %>
+
+<div class="session-detail-card">
+  <div class="session-detail-header">
+    <div>
+      <span class="badge badge-sport"><%= session.sport ? session.sport.name : 'Sports' %></span>
+      <h1><%= session.venue %></h1>
+      <p class="subtitle">Hosted by <strong><%= session.creator ? session.creator.name : 'Unknown' %></strong></p>
+    </div>
+    <div>
+      <% if (session.isCancelled) { %>
+        <span class="badge badge-cancelled badge-lg">CANCELLED</span>
+      <% } else if (inPast) { %>
+        <span class="badge badge-warning badge-lg">COMPLETED / PAST</span>
+      <% } else if (remainingSlots === 0) { %>
+        <span class="badge badge-danger badge-lg">MATCH FULL</span>
+      <% } else { %>
+        <span class="badge badge-success badge-lg">OPEN (<%= remainingSlots %> Slots Left)</span>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (session.isCancelled) { %>
+    <div class="cancellation-alert">
+      <h3>❌ Session Cancelled</h3>
+      <p><strong>Mandatory Reason Provided by Host/Admin:</strong></p>
+      <blockquote class="cancellation-quote"><%= session.cancellationReason %></blockquote>
+    </div>
+  <% } %>
+
+  <div class="detail-grid">
+    <div class="detail-item">
+      <span class="detail-label">📅 Date</span>
+      <span class="detail-value"><%= session.date %></span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">⏰ Time</span>
+      <span class="detail-value"><%= session.time %></span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">👥 Total Capacity</span>
+      <span class="detail-value"><%= totalSlots %> Players</span>
+    </div>
+    <div class="detail-item">
+      <span class="detail-label">✅ Enrolled Count</span>
+      <span class="detail-value"><%= enrolledCount %> Players</span>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="roster-section">
+    <h3>Enrolled Players Roster (<%= enrolledCount %> / <%= totalSlots %>)</h3>
+    <% if (session.players.length === 0) { %>
+      <p class="text-muted">No players joined yet.</p>
+    <% } else { %>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player Name</th>
+            <th>Email</th>
+            <th>Team Name</th>
+            <th>Joined On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% session.players.forEach(function(playerEntry, index) { %>
+            <tr class="<%= playerEntry.userId === currentUser.id ? 'row-highlight' : '' %>">
+              <td><%= index + 1 %></td>
+              <td>
+                <strong><%= playerEntry.user ? playerEntry.user.name : 'Unknown' %></strong>
+                <% if (playerEntry.userId === session.creatorId) { %>
+                  <span class="badge badge-host">Host</span>
+                <% } %>
+                <% if (playerEntry.userId === currentUser.id) { %>
+                  <span class="badge badge-you">You</span>
+                <% } %>
+              </td>
+              <td><%= playerEntry.user ? playerEntry.user.name + ' (' + playerEntry.user.email + ')' : 'N/A' %></td>
+              <td><span class="badge badge-team"><%= playerEntry.teamName || 'Unassigned' %></span></td>
+              <td><%= new Date(playerEntry.createdAt).toLocaleDateString() %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <!-- ACTION SECTION: Join Match Form -->
+  <% if (!session.isCancelled && !inPast) { %>
+    <div class="action-box">
+      <% if (isAlreadyJoined) { %>
+        <div class="info-alert">
+          <span>✓ You are currently registered for this match!</span>
+        </div>
+      <% } else if (remainingSlots > 0) { %>
+        <h3>Join This Match</h3>
+        <form action="/sessions/<%= session.id %>/join" method="POST" class="form-inline">
+          <% if (csrfToken) { %>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <% } %>
+          <div class="form-group">
+            <label for="teamName">Preferred Team Name (optional):</label>
+            <input type="text" id="teamName" name="teamName" placeholder="e.g. Team Red / Team Blue" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-primary">Confirm Join Match</button>
+        </form>
+      <% } else { %>
+        <div class="warning-alert">
+          <span>⚠️ This match has reached maximum player capacity.</span>
+        </div>
+      <% } %>
+    </div>
+  <% } else if (inPast && !session.isCancelled) { %>
+    <div class="info-alert">
+      <span>ℹ️ This match date has passed and is marked as completed.</span>
+    </div>
+  <% } %>
+
+  <!-- CANCEL SECTION: Host / Admin Cancellation Form -->
+  <% if (!session.isCancelled && (isCreator || isAdmin)) { %>
+    <div class="cancel-box">
+      <h3>Cancel Session (Host / Admin Only)</h3>
+      <p class="text-muted">Cancelling this session requires a mandatory cancellation reason that will be displayed to all enrolled players.</p>
+      <form action="/sessions/<%= session.id %>/cancel" method="POST" class="form-grid">
+        <% if (csrfToken) { %>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% } %>
+        <div class="form-group">
+          <label for="cancellationReason">Reason for Cancellation (Mandatory):</label>
+          <textarea id="cancellationReason" name="cancellationReason" required rows="3" placeholder="State reason (e.g. Inclement weather, venue unavailability)..." class="form-control"></textarea>
+        </div>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this match?');">Cancel Match Session</button>
+      </form>
+    </div>
+  <% } %>
+
+  <div class="card-footer-actions">
+    <a href="/dashboard" class="btn btn-outline">&larr; Back to Dashboard</a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

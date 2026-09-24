@@ -1,0 +1,45 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Sports Categories</h1>
+    <p class="subtitle">Explore supported sports disciplines and categories</p>
+  </div>
+  <% if (currentUser && currentUser.role === 'admin') { %>
+    <a href="/sports/new" class="btn btn-primary">+ Add New Sport</a>
+  <% } %>
+</div>
+
+<% if (sports.length === 0) { %>
+  <div class="empty-state">
+    <p>No sports categories available yet.</p>
+    <% if (currentUser && currentUser.role === 'admin') { %>
+      <a href="/sports/new" class="btn btn-primary">Create First Sport Category</a>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Sport Name</th>
+          <th>Created By (Admin)</th>
+          <th>Total Sessions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sports.forEach(function(sport) { %>
+          <tr>
+            <td>#<%= sport.id %></td>
+            <td><strong><%= sport.name %></strong></td>
+            <td><%= sport.admin ? sport.admin.name : 'System Admin' %></td>
+            <td><span class="badge badge-info"><%= sport.sessions ? sport.sessions.length : 0 %> Sessions</span></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,24 @@
+<%- include('../partials/header') %>
+
+<div class="form-card">
+  <h2>Add New Sport Category</h2>
+  <p class="subtitle">As an administrator, create a new sport type for players to schedule matches.</p>
+
+  <form action="/sports" method="POST" class="form-grid">
+    <% if (csrfToken) { %>
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% } %>
+
+    <div class="form-group">
+      <label for="name">Sport Name</label>
+      <input type="text" id="name" name="name" required placeholder="e.g. Football, Basketball, Tennis, Badminton" class="form-control">
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create Sport</button>
+      <a href="/sports" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>
