@@ -21,6 +21,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false, limit: '50kb' }));
 
+// Favicon handler to silence 404 browser log
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 // Session configuration
 app.use(
   session({
@@ -86,9 +89,9 @@ app.use((err, req, res, next) => {
 if (require.main === module) {
   const { sequelize } = require('./models');
   const PORT = process.env.PORT || 3000;
-  sequelize.authenticate()
+  sequelize.sync()
     .then(() => {
-      console.log('Database connected successfully.');
+      console.log('Database synced & connected successfully.');
       app.listen(PORT, () => {
         console.log(`Sports Scheduler App running at http://localhost:${PORT}`);
       });
