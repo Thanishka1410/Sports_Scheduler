@@ -8,7 +8,6 @@ const isSessionInPast = (dateStr, timeStr) => {
   try {
     const sessionDateTime = new Date(`${dateStr}T${timeStr || '00:00'}`);
     const now = new Date();
-    // Compare dates if time parsing is direct, or standard date comparison
     if (isNaN(sessionDateTime.getTime())) {
       const todayStr = new Date().toISOString().slice(0, 10);
       return dateStr < todayStr;
@@ -24,7 +23,6 @@ module.exports = {
   getDashboard: async (req, res, next) => {
     try {
       const userId = req.user.id;
-      const todayStr = new Date().toISOString().slice(0, 10);
 
       // Fetch all sessions with relationships
       const allSessions = await Session.findAll({
@@ -51,15 +49,14 @@ module.exports = {
       // 3. Cancelled sessions
       const cancelledSessions = allSessions.filter(s => s.isCancelled);
 
-      // 4. Available upcoming sessions:
-      // Not cancelled, date >= today (not in past), user is NOT already in players list, and open slots exist
+      // 4. Available upcoming sessions
       const availableSessions = allSessions.filter(s => {
         if (s.isCancelled) return false;
         if (isSessionInPast(s.date, s.time)) return false;
         const isJoined = s.players.some(p => p.userId === userId);
         if (isJoined) return false;
 
-        const maxPlayers = s.additionalPlayersNeeded + 1; // +1 for host slot
+        const maxPlayers = s.additionalPlayersNeeded + 1;
         return s.players.length < maxPlayers;
       });
 
@@ -102,7 +99,6 @@ module.exports = {
         return res.redirect('/sessions/new');
       }
 
-      // Check if past date
       if (isSessionInPast(date, time)) {
         req.flash('error', 'Cannot schedule a session in the past.');
         return res.redirect('/sessions/new');
@@ -120,7 +116,7 @@ module.exports = {
         isCancelled: false
       });
 
-      // Automatically add creator as Host player in SessionPlayer
+      // Automatically add host as player 1
       await SessionPlayer.create({
         sessionId: session.id,
         userId: req.user.id,
@@ -200,20 +196,17 @@ module.exports = {
         return res.redirect(`/sessions/${id}`);
       }
 
-      // PREVENT joining past sessions
       if (isSessionInPast(session.date, session.time)) {
         req.flash('error', 'Cannot join a session that has already passed.');
         return res.redirect(`/sessions/${id}`);
       }
 
-      // Check if user already joined
       const alreadyJoined = session.players.some(p => p.userId === req.user.id);
       if (alreadyJoined) {
         req.flash('error', 'You are already registered for this session.');
         return res.redirect(`/sessions/${id}`);
       }
 
-      // Check slot capacity
       const maxCapacity = session.additionalPlayersNeeded + 1;
       if (session.players.length >= maxCapacity) {
         req.flash('error', 'This session is already full.');
@@ -231,6 +224,49 @@ module.exports = {
     } catch (err) {
       console.error('Error joining session:', err);
       req.flash('error', 'Failed to join session. Please try again.');
+      return res.redirect(`/sessions/${req.params.id}`);
+    }
+  },
+
+  withdrawSession: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+
+      const session = await Session.findByPk(id);
+      if (!session) {
+        req.flash('error', 'Session not found.');
+        return res.redirect('/dashboard');
+      }
+
+      if (session.isCancelled) {
+        req.flash('error', 'Cannot withdraw from a cancelled session.');
+        return res.redirect(`/sessions/${id}`);
+      }
+
+      if (isSessionInPast(session.date, session.time)) {
+        req.flash('error', 'Cannot withdraw from a session that has already passed.');
+        return res.redirect(`/sessions/${id}`);
+      }
+
+      const playerRecord = await SessionPlayer.findOne({
+        where: {
+          sessionId: id,
+          userId: req.user.id
+        }
+      });
+
+      if (!playerRecord) {
+        req.flash('error', 'You are not registered in this match session.');
+        return res.redirect(`/sessions/${id}`);
+      }
+
+      await playerRecord.destroy();
+
+      req.flash('success', 'You have successfully withdrawn from this match session.');
+      return res.redirect(`/sessions/${id}`);
+    } catch (err) {
+      console.error('Error withdrawing from session:', err);
+      req.flash('error', 'Failed to withdraw from session. Please try again.');
       return res.redirect(`/sessions/${req.params.id}`);
     }
   },

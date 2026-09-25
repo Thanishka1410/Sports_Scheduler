@@ -87,12 +87,18 @@
     <% } %>
   </div>
 
-  <!-- ACTION SECTION: Join Match Form -->
+  <!-- ACTION SECTION: Join / Withdraw Match Form -->
   <% if (!session.isCancelled && !inPast) { %>
     <div class="action-box">
       <% if (isAlreadyJoined) { %>
-        <div class="info-alert">
+        <div class="info-alert" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <span>✓ You are currently registered for this match!</span>
+          <form action="/sessions/<%= session.id %>/withdraw" method="POST" style="margin: 0;">
+            <% if (csrfToken) { %>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% } %>
+            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to withdraw from this match session?');">Withdraw from Match</button>
+          </form>
         </div>
       <% } else if (remainingSlots > 0) { %>
         <h3>Join This Match</h3>

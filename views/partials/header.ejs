@@ -19,8 +19,8 @@
         <% if (currentUser) { %>
           <a href="/dashboard" class="nav-link">Dashboard</a>
           <a href="/sports" class="nav-link">Sports</a>
-          <a href="/sessions/new" class="btn btn-primary btn-sm">+ Host Match</a>
           <% if (currentUser.role === 'admin') { %>
+            <a href="/sessions/new" class="btn btn-primary btn-sm">+ Host Match</a>
             <a href="/reports" class="nav-link badge-admin-nav">Admin Reports</a>
           <% } %>
           <div class="user-profile-menu">

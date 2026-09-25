@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand app.test.js",
+    "test": "cross-env NODE_ENV=test jest tests/app_integration.test.js --runInBand",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:test": "cross-env NODE_ENV=test sequelize-cli db:migrate",
     "db:undo:all": "sequelize-cli db:migrate:undo:all"
@@ -33,5 +33,9 @@
     "sequelize-cli": "^6.6.2",
     "sqlite3": "^5.1.7",
     "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "forceExit": true
   }
 }

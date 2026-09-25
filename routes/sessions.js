@@ -3,12 +3,13 @@
 const express = require('express');
 const router = express.Router();
 const sessionController = require('../controllers/sessionController');
-const { ensureAuthenticated } = require('../middleware/auth');
+const { ensureAuthenticated, ensureAdmin } = require('../middleware/auth');
 
-router.get('/new', ensureAuthenticated, sessionController.getNewSession);
-router.post('/', ensureAuthenticated, sessionController.postSession);
+router.get('/new', ensureAuthenticated, ensureAdmin, sessionController.getNewSession);
+router.post('/', ensureAuthenticated, ensureAdmin, sessionController.postSession);
 router.get('/:id', ensureAuthenticated, sessionController.getSessionDetails);
 router.post('/:id/join', ensureAuthenticated, sessionController.joinSession);
+router.post('/:id/withdraw', ensureAuthenticated, sessionController.withdrawSession);
 router.post('/:id/cancel', ensureAuthenticated, sessionController.cancelSession);
 
 module.exports = router;

@@ -3,8 +3,8 @@
 process.env.NODE_ENV = 'test';
 
 const request = require('supertest');
-const app = require('./app');
-const { sequelize, User, Sport, Session, SessionPlayer } = require('./models');
+const app = require('../app');
+const { sequelize, User, Sport, Session, SessionPlayer } = require('../models');
 
 const getFutureDate = (daysAhead = 1) => {
   const d = new Date();

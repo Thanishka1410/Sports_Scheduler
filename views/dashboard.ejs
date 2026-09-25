@@ -3,11 +3,11 @@
 <div class="dashboard-header">
   <div>
     <h1>Sports Dashboard</h1>
-    <p class="text-muted">Welcome back, <strong><%= currentUser.name %></strong>! Manage your games and browse open slots.</p>
+    <p class="text-muted">Welcome back, <strong><%= currentUser.name %></strong>! Browse open slots and manage your match participation.</p>
   </div>
   <div class="dashboard-actions">
-    <a href="/sessions/new" class="btn btn-primary">+ Host New Match</a>
     <% if (currentUser.role === 'admin') { %>
+      <a href="/sessions/new" class="btn btn-primary">+ Host New Match</a>
       <a href="/sports/new" class="btn btn-secondary">+ Add Sport Category</a>
     <% } %>
   </div>
@@ -26,7 +26,7 @@
     <h3>Available Upcoming Games</h3>
     <% if (availableSessions.length === 0) { %>
       <div class="empty-state">
-        <p>No open upcoming sessions right now. Be the first to <a href="/sessions/new">host a match</a>!</p>
+        <p>No open upcoming sessions right now.</p>
       </div>
     <% } else { %>
       <div class="sessions-grid">
@@ -55,7 +55,7 @@
     <h3>Sessions Hosted / Created by Me</h3>
     <% if (createdSessions.length === 0) { %>
       <div class="empty-state">
-        <p>You haven't hosted any sessions yet. <a href="/sessions/new">Create one now!</a></p>
+        <p>You haven't hosted any sessions.</p>
       </div>
     <% } else { %>
       <div class="sessions-grid">

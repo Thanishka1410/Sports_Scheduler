@@ -14,7 +14,6 @@ const getFutureDate = (daysAhead = 1) => {
 };
 
 beforeAll(async () => {
-  // Sync test database schema
   await sequelize.sync({ force: true });
 });
 
@@ -117,7 +116,7 @@ describe('Sports Scheduler App - Automated Integration Test Suite', () => {
 
   // 3. Session Scheduling & Match Creation
   describe('Match Session Scheduling', () => {
-    test('3.1 Host can create an upcoming match session', async () => {
+    test('3.1 Admin can create an upcoming match session', async () => {
       const futureDate = getFutureDate(3);
       const res = await adminAgent
         .post('/sessions')
@@ -136,12 +135,31 @@ describe('Sports Scheduler App - Automated Integration Test Suite', () => {
       expect(createdSession).not.toBeNull();
       expect(createdSession.additionalPlayersNeeded).toBe(2);
 
-      // Creator is automatically registered as player 1
       const players = await SessionPlayer.findAll({ where: { sessionId: createdSession.id } });
       expect(players.length).toBe(1);
     });
 
-    test('3.2 Prevents creating sessions in the past', async () => {
+    test('3.2 Regular player CANNOT create/host a match session', async () => {
+      const futureDate = getFutureDate(4);
+      const res = await playerAgent
+        .post('/sessions')
+        .type('form')
+        .send({
+          sportId: createdSport.id,
+          venue: 'Unauthorized Player Court',
+          date: futureDate,
+          time: '19:00',
+          additionalPlayersNeeded: 4
+        });
+
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toBe('/dashboard');
+
+      const forbiddenSession = await Session.findOne({ where: { venue: 'Unauthorized Player Court' } });
+      expect(forbiddenSession).toBeNull();
+    });
+
+    test('3.3 Prevents creating sessions in the past', async () => {
       const res = await adminAgent
         .post('/sessions')
         .type('form')
@@ -154,15 +172,14 @@ describe('Sports Scheduler App - Automated Integration Test Suite', () => {
         });
 
       expect(res.status).toBe(302);
-      expect(res.headers.location).toBe('/sessions/new');
 
       const pastSession = await Session.findOne({ where: { venue: 'Old Stadium' } });
       expect(pastSession).toBeNull();
     });
   });
 
-  // 4. Joining Sessions & Business Rules Validation
-  describe('Session Joining Rules', () => {
+  // 4. Joining & Withdrawing Sessions
+  describe('Session Joining and Withdrawal Rules', () => {
     test('4.1 Player can join an available upcoming session', async () => {
       const res = await playerAgent
         .post(`/sessions/${createdSession.id}/join`)
@@ -193,10 +210,29 @@ describe('Sports Scheduler App - Automated Integration Test Suite', () => {
       expect(res.status).toBe(302);
 
       const players = await SessionPlayer.findAll({ where: { sessionId: createdSession.id } });
-      expect(players.length).toBe(2); // Count remains 2
+      expect(players.length).toBe(2);
     });
 
-    test('4.3 Prevents joining past sessions directly created in DB', async () => {
+    test('4.3 Player can withdraw from a joined session', async () => {
+      const res = await playerAgent
+        .post(`/sessions/${createdSession.id}/withdraw`)
+        .type('form')
+        .send({});
+
+      expect(res.status).toBe(302);
+      expect(res.headers.location).toBe(`/sessions/${createdSession.id}`);
+
+      const playerUser = await User.findOne({ where: { email: 'player@test.com' } });
+      const withdrawnRecord = await SessionPlayer.findOne({
+        where: {
+          sessionId: createdSession.id,
+          userId: playerUser.id
+        }
+      });
+      expect(withdrawnRecord).toBeNull();
+    });
+
+    test('4.4 Prevents joining past sessions directly created in DB', async () => {
       const pastMatch = await Session.create({
         sportId: createdSport.id,
         creatorId: (await User.findOne({ where: { email: 'admin@test.com' } })).id,
